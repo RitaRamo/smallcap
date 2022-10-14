@@ -1,0 +1,15 @@
+datasets==2.4.0
+faiss-gpu==1.7.2
+h5py==3.7.0
+huggingface-hub==0.8.1
+pandas==1.4.3
+Pillow==9.2.0
+pyarrow==9.0.0
+pyparsing==3.0.9
+PyYAML==6.0
+tokenizers==0.12.1
+torch==1.12.1
+torchaudio==0.12.1
+torchvision==0.13.1
+tqdm==4.64.0
+transformers==4.21.1
