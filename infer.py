@@ -11,12 +11,11 @@ from collections import namedtuple
 from PIL import ImageFile
 from collections import Counter
 import torch
-from transformers import ViTFeatureExtractor, AutoTokenizer, CLIPFeatureExtractor
+from transformers import AutoTokenizer, CLIPFeatureExtractor
 from transformers.models.auto.configuration_auto import AutoConfig
 from transformers.modeling_outputs import BaseModelOutput
-from torch.utils.data import Dataset
 
-from src.vision_encoder_decoder import VisionEncoderDecoderModel
+from src.vision_encoder_decoder import SmallCap
 from src.utils import load_data_for_inference, prep_strings, postprocess_preds
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -92,7 +91,7 @@ def evaluate_rag_model(args, feature_extractor, tokenizer, model, eval_df):
 
 def load_model(args, checkpoint_path):
     config = AutoConfig.from_pretrained(checkpoint_path + '/config.json')
-    model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(args.encoder_name, args.decoder_name,
+    model = SmallCap.from_encoder_decoder_pretrained(args.encoder_name, args.decoder_name,
                               cross_attention_reduce_factor=config.decoder.cross_attention_reduce_factor)
     model.load_state_dict(torch.load(checkpoint_path + '/pytorch_model.bin'))
     model.config = config

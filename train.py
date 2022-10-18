@@ -1,17 +1,14 @@
 import pandas as pd
 import numpy as np
-import json
-import sys
 import os
 import argparse
-from PIL import Image
 
-import torch
-from torch.utils.data import Dataset
-from transformers import ViTFeatureExtractor, AutoTokenizer, CLIPFeatureExtractor
+from transformers.models.auto.configuration_auto import AutoConfig
+from transformers import AutoTokenizer, CLIPFeatureExtractor, AutoModel, AutoModelForCausalLM
 from transformers import Seq2SeqTrainer, default_data_collator, Seq2SeqTrainingArguments
 
-from src.vision_encoder_decoder import VisionEncoderDecoderModel
+from src.vision_encoder_decoder import SmallCap, SmallCapConfig
+from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
 from src.utils import *
 
 # for attention with 28M params, we devide the attention dimensions by 1
@@ -22,16 +19,23 @@ EOS_TOKEN = '.'
 CAPTION_LENGTH = 25
 
 def get_model_and_auxiliaries(args):
-    
+
+    # register model types
+    AutoConfig.register("this_gpt2", ThisGPT2Config)
+    AutoModel.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    AutoModelForCausalLM.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    AutoConfig.register("smallcap", SmallCapConfig)
+    AutoModel.register(SmallCapConfig, SmallCap)
+
     # create and configure model
     cross_attention_reduce_factor = PARAMS2REDUCE_FACTOR[args.attention_size]
 
-    feature_extractor = CLIPFeatureExtractor.from_pretrained(args.encoder_name) #ViTFeatureExtractor.from_pretrained(encoder_name)
+    feature_extractor = CLIPFeatureExtractor.from_pretrained(args.encoder_name)
     tokenizer = AutoTokenizer.from_pretrained(args.decoder_name)
     tokenizer.pad_token = PAD_TOKEN
     tokenizer.eos_token = EOS_TOKEN
 
-    model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(args.encoder_name, 
+    model = SmallCap.from_encoder_decoder_pretrained(args.encoder_name,
                                                                       args.decoder_name,
                                                                       cross_attention_reduce_factor=cross_attention_reduce_factor)
     model.config.vocab_size = model.config.decoder.vocab_size

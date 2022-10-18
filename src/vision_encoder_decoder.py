@@ -165,7 +165,7 @@ class SmallCap(PreTrainedModel):
     :meth*~transformers.AutoModelForCausalLM.from_pretrained* class method for the decoder.
     """
     config_class = SmallCapConfig
-    base_model_prefix = "vision_encoder_decoder"
+    base_model_prefix = "smallcap"
     main_input_name = "pixel_values"
 
     def __init__(
