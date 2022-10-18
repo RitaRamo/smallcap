@@ -157,7 +157,7 @@ class SmallCapConfig(VisionEncoderDecoderConfig):
         self.decoder.cross_attention_reduce_factor = cross_attention_reduce_factor
         
 
-class SmallCap(PreTrainedModel):
+class VisionEncoderDecoderModel(PreTrainedModel):
     r"""
     [`VisionEncoderDecoderModel`] is a generic model class that will be instantiated as a transformer architecture with
     one of the base vision model classes of the library as encoder and another one as decoder when created with the
