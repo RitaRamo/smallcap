@@ -2,20 +2,15 @@ import pandas as pd
 import argparse
 import os
 from tqdm import tqdm
-import numpy as np
 import json
-import sys
 from PIL import Image
 import h5py
-from collections import namedtuple
 from PIL import ImageFile
-from collections import Counter
 import torch
-from transformers import AutoTokenizer, CLIPFeatureExtractor
+from transformers import AutoTokenizer, CLIPFeatureExtractor, AutoModel
 from transformers.models.auto.configuration_auto import AutoConfig
 from transformers.modeling_outputs import BaseModelOutput
 
-from src.vision_encoder_decoder import SmallCap
 from src.utils import load_data_for_inference, prep_strings, postprocess_preds
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -90,10 +85,9 @@ def evaluate_rag_model(args, feature_extractor, tokenizer, model, eval_df):
     return out
 
 def load_model(args, checkpoint_path):
+
     config = AutoConfig.from_pretrained(checkpoint_path + '/config.json')
-    model = SmallCap.from_encoder_decoder_pretrained(args.encoder_name, args.decoder_name,
-                              cross_attention_reduce_factor=config.decoder.cross_attention_reduce_factor)
-    model.load_state_dict(torch.load(checkpoint_path + '/pytorch_model.bin'))
+    model = AutoModel.from_pretrained(checkpoint_path)
     model.config = config
     model.eval()
     model.to(args.device)
@@ -105,7 +99,20 @@ def infer_one_checkpoint(args, feature_extractor, tokenizer, checkpoint_path, ev
     with open(os.path.join(checkpoint_path, args.outfile_name), 'w') as outfile:
         json.dump(preds, outfile)
 
+def register_model_and_config():
+    from transformers import AutoModelForCausalLM
+    from src.vision_encoder_decoder import SmallCap, SmallCapConfig
+    from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
+
+    AutoConfig.register("this_gpt2", ThisGPT2Config)
+    AutoModel.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    AutoModelForCausalLM.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    AutoConfig.register("smallcap", SmallCapConfig)
+    AutoModel.register(SmallCapConfig, SmallCap)
+
 def main(args):
+
+    register_model_and_config()
 
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
