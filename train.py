@@ -90,13 +90,14 @@ def main(args):
     train_dataset = get_data(tokenizer, model.config.max_length, args)
 
     model_type = 'norag' if args.disable_rag else 'rag'
-    output_dir = '{}_{}M'.format(model_type, args.attention_size)
+    output_dir = '{}_{}_{}M'.format(model_type, args.attention_size, args.decoder_name)
 
     output_dir = os.path.join(args.experiments_dir, output_dir)
     
     training_args = Seq2SeqTrainingArguments(
         num_train_epochs=args.n_epochs, 
         per_device_train_batch_size=args.batch_size, 
+        gradient_accumulation_steps=args.gradient_steps,
         learning_rate = args.lr,
         fp16=True,
         save_strategy="epoch",
@@ -136,6 +137,7 @@ if __name__ == '__main__':
     parser.add_argument("--n_epochs", type=int, default=10, help="Number of training epochs")
     parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size")
+    parser.add_argument("--gradient_steps", type=int, default=1, help="Number of gradient accumulation steps")
 
     args = parser.parse_args()
 
