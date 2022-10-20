@@ -11,9 +11,8 @@ from transformers import logging
 from transformers import CLIPFeatureExtractor, CLIPVisionModel
 logging.set_verbosity_error()
 
-WORKING_DIR = './'
-data_dir = WORKING_DIR + '../smallercap/data/images/'
-features_dir = WORKING_DIR + 'features/'
+data_dir = 'data/images/'
+features_dir = 'features/'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
