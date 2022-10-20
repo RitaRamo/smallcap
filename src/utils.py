@@ -50,29 +50,17 @@ def postprocess_preds(pred, tokenizer):
     return pred
 
 class TrainDataset(Dataset):
-    def __init__(self, df, features_path, chunk_info_path, tokenizer, rag=False, template_path=None, k=None, max_target_length=150):
+    def __init__(self, df, features_path, tokenizer, rag=False, template_path=None, k=None, max_target_length=150):
         self.df = df
         self.tokenizer = tokenizer
         self.max_target_length = max_target_length 
-        self.chunk_cutoffs = [x for x, _ in json.load(open(chunk_info_path))]
-        self.features = {idx: h5py.File(features_path.format(idx), 'r')
-                            for idx in range(len(self.chunk_cutoffs))}
-        self.df['chunk_idx'] = self.get_chunk_idx()
+        self.features = h5py.File(features_path)
 
         if rag:
             self.template = open(template_path).read().strip() + ' '
             assert k is not None 
             self.k = k
         self.rag = rag
-
-    def get_chunk_idx(self):
-        idx = []
-        for file_name in self.df['file_name']:
-            if file_name in self.chunk_cutoffs:
-                idx.append(self.chunk_cutoffs.index(file_name))
-            else:
-                idx.append(bisect.bisect(self.chunk_cutoffs, file_name))
-        return idx
 
     def __len__(self):
         return len(self.df)
@@ -86,7 +74,7 @@ class TrainDataset(Dataset):
         else:
             decoder_input_ids, labels = prep_strings(text, self.tokenizer, max_length=self.max_target_length)
         # load precomputed features
-        encoder_outputs = self.features[self.df['chunk_idx'][idx]][self.df['file_name'][idx]][()]
+        encoder_outputs = self.features[self.df['file_name'][idx]][()]
         encoding = {"encoder_outputs": torch.tensor(encoder_outputs), 
                     "decoder_input_ids": torch.tensor(decoder_input_ids),
                     "labels": torch.tensor(labels)}

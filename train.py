@@ -74,8 +74,7 @@ def get_data(tokenizer, max_length, args):
 
     train_dataset = TrainDataset(
                            df=train_df,
-                           features_path=os.path.join(args.features_dir,'train.{}.hdf5'),
-                           chunk_info_path=os.path.join(args.features_dir, 'train_chunk_ids.json'),
+                           features_path=os.path.join(args.features_dir,'train.hdf5'),
                            tokenizer=tokenizer,
                            rag=not args.disable_rag,
                            template_path=args.template_path,

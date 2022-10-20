@@ -207,17 +207,6 @@ class SmallCap(PreTrainedModel):
         self.encoder.main_input_name = 'pixel_values'
         self.decoder = decoder
 
-        #if self.encoder.config.to_dict() != self.config.encoder.to_dict():
-        #    logger.warning(
-        #        f"Config of the encoder: {self.encoder.__class__} is overwritten by shared encoder config:"
-        #        f" {self.config.encoder}"
-        #    )
-        #if self.decoder.config.to_dict() != self.config.decoder.to_dict():
-        #    logger.warning(
-        #        f"Config of the decoder: {self.decoder.__class__} is overwritten by shared decoder config:"
-        #        f" {self.config.decoder}"
-        #    )
-
         # make sure that the individual model's config refers to the shared config
         # so that the updates to the config will be synced
         self.encoder.config = self.config.encoder
