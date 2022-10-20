@@ -54,7 +54,7 @@ class TrainDataset(Dataset):
         self.df = df
         self.tokenizer = tokenizer
         self.max_target_length = max_target_length 
-        self.features = h5py.File(features_path)
+        self.features = h5py.File(features_path, 'r')
 
         if rag:
             self.template = open(template_path).read().strip() + ' '
