@@ -74,7 +74,7 @@ class TrainDataset(Dataset):
         else:
             decoder_input_ids, labels = prep_strings(text, self.tokenizer, max_length=self.max_target_length)
         # load precomputed features
-        encoder_outputs = self.features[self.df['file_name'][idx]][()]
+        encoder_outputs = self.features[self.df['cocoid'][idx]][()]
         encoding = {"encoder_outputs": torch.tensor(encoder_outputs), 
                     "decoder_input_ids": torch.tensor(decoder_input_ids),
                     "labels": torch.tensor(labels)}
@@ -96,7 +96,7 @@ def load_data_for_training(annot_path, caps_path=None):
             caps = None
         samples = []
         for sentence in item['sentences']:
-            samples.append({'file_name': file_name, 'caps': caps, 'text': ' '.join(sentence['tokens'])})
+            samples.append({'file_name': file_name, 'cocoid': str(item['cocoid']), 'caps': caps, 'text': ' '.join(sentence['tokens'])})
         if item['split'] == 'train' or item['split'] == 'restval':
             data['train'] += samples
         elif item['split'] == 'val':
