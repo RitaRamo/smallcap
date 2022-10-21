@@ -94,10 +94,10 @@ class ThisGPT2Attention(GPT2Attention):
         self.scale_attn_by_inverse_layer_idx = config.scale_attn_by_inverse_layer_idx
         self.layer_idx = layer_idx
         self.reorder_and_upcast_attn = config.reorder_and_upcast_attn
-        
+               
         if self.is_cross_attention:
             self.c_attn = Conv1D(int(2 / self.cross_attention_reduce_factor * self.embed_dim), 
-                                                                                  self.embed_dim) 
+                                                                                  config.encoder_hidden_size) 
             self.q_attn = Conv1D(int(self.embed_dim / self.cross_attention_reduce_factor), self.embed_dim)
             self.c_proj = Conv1D(self.embed_dim, int(self.embed_dim / self.cross_attention_reduce_factor))
         else:

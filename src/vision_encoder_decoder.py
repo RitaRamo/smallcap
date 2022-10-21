@@ -29,7 +29,7 @@ from transformers.models.auto.configuration_auto import AutoConfig
 from transformers.models.auto.modeling_auto import AutoModel, AutoModelForCausalLM
 from transformers.models.vision_encoder_decoder.configuration_vision_encoder_decoder import VisionEncoderDecoderConfig
 
-from .gpt2 import ThisGPT2LMHeadModel as GPT2LMHeadModel
+from .gpt2 import ThisGPT2LMHeadModel
 from .gpt2 import ThisGPT2Config
 
 # Copied from transformers.models.encoder_decoder.modeling_encoder_decoder.shift_tokens_right
@@ -211,11 +211,6 @@ class SmallCap(PreTrainedModel):
         # so that the updates to the config will be synced
         self.encoder.config = self.config.encoder
         self.decoder.config = self.config.decoder
-        if (
-            self.encoder.config.vision_config.hidden_size != self.decoder.config.hidden_size
-            and self.decoder.config.cross_attention_hidden_size is None
-        ):
-            self.enc_to_dec_proj = nn.Linear(self.encoder.config.vision_config.hidden_size, self.decoder.config.hidden_size)
 
     def get_encoder(self):
         return self.encoder
@@ -374,6 +369,7 @@ class SmallCap(PreTrainedModel):
                     )
                     decoder_config.is_decoder = True
                     decoder_config.add_cross_attention = True
+                decoder_config.encoder_hidden_size = encoder.config.vision_config.hidden_size
                 decoder_config.cross_attention_reduce_factor = cross_attention_reduce_factor
                 kwargs_decoder["config"] = decoder_config
             
@@ -387,7 +383,7 @@ class SmallCap(PreTrainedModel):
                 )
             
             #decoder = AutoModelForCausalLM.from_pretrained(decoder_pretrained_model_name_or_path, **kwargs_decoder)   
-            decoder = GPT2LMHeadModel.from_pretrained(decoder_pretrained_model_name_or_path, **kwargs_decoder)
+            decoder = ThisGPT2LMHeadModel.from_pretrained(decoder_pretrained_model_name_or_path, **kwargs_decoder)
         # instantiate config with corresponding kwargs
         config = SmallCapConfig.from_encoder_decoder_configs(encoder.config, decoder.config, **kwargs)
 
@@ -468,13 +464,6 @@ class SmallCap(PreTrainedModel):
             encoder_outputs = BaseModelOutput(encoder_outputs, None)
 
         encoder_hidden_states = encoder_outputs[0]
-
-        # optionally project encoder_hidden_states
-        if (
-            self.encoder.config.vision_config.hidden_size != self.decoder.config.hidden_size
-            and self.decoder.config.cross_attention_hidden_size is None
-        ):
-            encoder_hidden_states = self.enc_to_dec_proj(encoder_hidden_states)
 
         # else:
         encoder_attention_mask = None
