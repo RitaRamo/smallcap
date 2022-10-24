@@ -20,7 +20,7 @@ encoder_name = 'openai/clip-vit-base-patch32'
 feature_extractor = CLIPFeatureExtractor.from_pretrained(encoder_name) 
 clip_encoder = CLIPVisionModel.from_pretrained(encoder_name).to(device)
 
-annotations = json.load(open(WORKING_DIR + 'data/dataset_coco.json'))['images']
+annotations = json.load(open('data/dataset_coco.json'))['images']
 
 def load_data():
     data = {'train': [], 'val': []}
