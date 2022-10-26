@@ -89,7 +89,7 @@ def main(args):
     train_dataset = get_data(tokenizer, model.config.max_length, args)
 
     model_type = 'norag' if args.disable_rag else 'rag'
-    output_dir = '{}_{}_{}M'.format(model_type, args.attention_size, args.decoder_name)
+    output_dir = '{}_{}M_{}'.format(model_type, args.attention_size, args.decoder_name)
 
     output_dir = os.path.join(args.experiments_dir, output_dir)
     
