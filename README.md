@@ -39,11 +39,9 @@ See `SmallCap_demo.inynb` for a demo of our pretrained model.
 
 ### Data
 
-```mkdir data```
-
 Download the COCO Karpathy splits file `dataset_coco.json` from [here](https://www.kaggle.com/datasets/shtvkumar/karpathy-splits) and place it in `data/`.
 
-Download all COCO images (train, val and test, 2017 version) from [here](https://cocodataset.org/#download) and place them in `data/images`. The expected naming format is twelve digits followed by a `.jpg` extension, e.g. `000000000001.jpg` for image with COCO id `1`.
+Download all COCO images (train, val and test, 2017 version) from [here](https://cocodataset.org/#download) and place them in `data/images`. The expected naming format is twelve digits followed by a `.jpg` extension, e.g. `data/images/000000000001.jpg` for image with COCO id `1`.
 
 ### Preprocessing
 
