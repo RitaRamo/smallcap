@@ -122,7 +122,6 @@ def main(args):
         args.k=0
         infer_fn = evaluate_norag_model
     else:
-        args.k= args.k if args.k else args.model_path.split("_")[-1]
         infer_fn = evaluate_rag_model
 
     if args.infer_test:
@@ -171,7 +170,7 @@ if __name__ == '__main__':
     parser.add_argument("--decoder_name", type=str, default="gpt2", help="Decoder name as found of HuggingFace or stored locally")
 
     parser.add_argument("--disable_rag", action="store_true", default=False, help="Disable retrieval augmentation or not")
-    parser.add_argument("--k", type=int, default=None, help="Number of retrieved captions to use in prefix")
+    parser.add_argument("--k", type=int, default=4, help="Number of retrieved captions to use in prefix")
     parser.add_argument("--retrieval_encoder", type=str, default="RN50x64", help="Visual encoder used for retieving captions")
     parser.add_argument("--captions_path", type=str, default="data/retrieved_caps_resnet50x64.json", help="JSON file with retrieved captions")
     parser.add_argument("--template_path", type=str, default="src/template.txt", help="TXT file with template")
