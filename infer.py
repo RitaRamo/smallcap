@@ -52,9 +52,6 @@ def evaluate_rag_model(args, feature_extractor, tokenizer, model, eval_df):
     if args.features_path is not None:
         features = h5py.File(args.features_path, 'r')
 
-    with open('data/stop_words.txt') as f:
-        stop_words = f.read().splitlines()
-
     out = []
     for idx in tqdm(range(len(eval_df))):
         file_name = eval_df['file_name'][idx]
