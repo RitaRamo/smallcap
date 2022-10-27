@@ -10,8 +10,6 @@ conda activate smallcap
 pip install -r requirements.txt
 ```
 
-At the moment CLIP models based on ResNet are not available through HuggingFace so it is necessary to also install the original CLIP implementation from [here](https://github.com/openai/CLIP). 
-
 #### Evaluation package
 
 Download Stanford models for computing SPICE (a slightly modified version of this [repo](https://github.com/daqingliu/coco-caption.git)):
@@ -44,6 +42,12 @@ Download the COCO Karpathy splits file `dataset_coco.json` from [here](https://w
 Download all COCO images (train, val and test, 2017 version) from [here](https://cocodataset.org/#download) and place them in `data/images`. The expected naming format is twelve digits followed by a `.jpg` extension, e.g. `data/images/000000000001.jpg` for image with COCO id `1`.
 
 ### Preprocessing
+
+At the moment CLIP models based on ResNet are not available through HuggingFace so it is necessary to also install the original CLIP implementation from [here](https://github.com/openai/CLIP):
+
+```
+pip install git+https://github.com/openai/CLIP.git
+```
 
 Extract train and val features: 
 
