@@ -57,11 +57,9 @@ class ThisGPT2Config(GPT2Config):
 
     def __init__(
         self,
-        cross_attention_reduce_factor = 1,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.cross_attention_reduce_factor = cross_attention_reduce_factor
         
 class ThisGPT2Attention(GPT2Attention):
     def __init__(self, config, is_cross_attention=False, layer_idx=None):
