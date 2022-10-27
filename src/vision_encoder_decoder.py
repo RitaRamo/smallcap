@@ -150,11 +150,9 @@ class SmallCapConfig(VisionEncoderDecoderConfig):
 
     def __init__(
         self,
-        cross_attention_reduce_factor = 4,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.decoder.cross_attention_reduce_factor = cross_attention_reduce_factor
         
 
 class SmallCap(PreTrainedModel):
@@ -173,7 +171,6 @@ class SmallCap(PreTrainedModel):
         config: Optional[PretrainedConfig] = None,
         encoder: Optional[PreTrainedModel] = None,
         decoder: Optional[PreTrainedModel] = None,
-        cross_attention_reduce_factor: int = 4,
     ):
         if config is None and (encoder is None or decoder is None):
             raise ValueError("Either a configuration or an encoder and a decoder has to be provided.")
@@ -240,7 +237,7 @@ class SmallCap(PreTrainedModel):
         cls,
         encoder_pretrained_model_name_or_path: str = None,
         decoder_pretrained_model_name_or_path: str = None,
-        cross_attention_reduce_factor: int = 4,
+        cross_attention_reduce_factor: int = None,
         *model_args,
         **kwargs
     ) -> PreTrainedModel:
