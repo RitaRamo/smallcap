@@ -76,7 +76,7 @@ If you specify `--infer_test` inference uses test data, else val data is used.
 
 E.g. to run inference on the test split with model `rag_7M`, checkpoint `17712`, run
 
-```python infer.py```--model_path experiments/rag_7M --checkpoint_path checkpoint-17712 --infer_test
+```python infer.py --model_path experiments/rag_7M --checkpoint_path checkpoint-17712 --infer_test```
 
 The model predictions are stored as ```<val/test>_preds.json``` in each respective checkpoint subdirectory.
 
