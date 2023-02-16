@@ -2,13 +2,19 @@ import pandas as pd
 import numpy as np
 import os
 import argparse
+os.environ["WANDB_DISABLED"] = "true"
 
 from transformers.models.auto.configuration_auto import AutoConfig
 from transformers import AutoTokenizer, CLIPFeatureExtractor, AutoModel, AutoModelForCausalLM
 from transformers import Seq2SeqTrainer, default_data_collator, Seq2SeqTrainingArguments
 
+from transformers import VisionEncoderDecoderModel, CLIPModel, CLIPVisionModel,EncoderDecoderModel
 from src.vision_encoder_decoder import SmallCap, SmallCapConfig
-from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
+#from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
+from src.gpt2_refactor import ThisGPT2Config, ThisGPT2LMHeadModel
+from src.xglm import ThisXGLMConfig, ThisXGLMForCausalLM
+from src.opt import ThisOPTConfig, ThisOPTForCausalLM
+
 from src.utils import *
 
 # for attention with 28M params, we devide the attention dimensions by 1
@@ -21,9 +27,21 @@ CAPTION_LENGTH = 25
 def get_model_and_auxiliaries(args):
 
     # register model types
-    AutoConfig.register("this_gpt2", ThisGPT2Config)
-    AutoModel.register(ThisGPT2Config, ThisGPT2LMHeadModel)
-    AutoModelForCausalLM.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    if "xglm" in args.decoder_name:
+        AutoConfig.register("this_xglm", ThisXGLMConfig)
+        AutoModel.register(ThisXGLMConfig, ThisXGLMForCausalLM)
+        AutoModelForCausalLM.register(ThisXGLMConfig, ThisXGLMForCausalLM)
+
+    elif "opt" in args.decoder_name:
+        AutoConfig.register("this_opt", ThisOPTConfig)
+        AutoModel.register(ThisOPTConfig, ThisOPTForCausalLM)
+        AutoModelForCausalLM.register(ThisOPTConfig, ThisOPTForCausalLM)
+
+    else:
+        AutoConfig.register("this_gpt2", ThisGPT2Config)
+        AutoModel.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+        AutoModelForCausalLM.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    
     AutoConfig.register("smallcap", SmallCapConfig)
     AutoModel.register(SmallCapConfig, SmallCap)
 
@@ -35,9 +53,7 @@ def get_model_and_auxiliaries(args):
     tokenizer.pad_token = PAD_TOKEN
     tokenizer.eos_token = EOS_TOKEN
 
-    model = SmallCap.from_encoder_decoder_pretrained(args.encoder_name,
-                                                                      args.decoder_name,
-                                                                      cross_attention_reduce_factor=cross_attention_reduce_factor)
+    model = SmallCap.from_encoder_decoder_pretrained(args.encoder_name, args.decoder_name, cross_attention_reduce_factor=cross_attention_reduce_factor)
     model.config.vocab_size = model.config.decoder.vocab_size
     model.config.decoder_start_token_id = None
     model.config.pad_token_id = tokenizer.pad_token_id 
@@ -52,13 +68,23 @@ def get_model_and_auxiliaries(args):
         model.config.max_length = CAPTION_LENGTH + 4 # there are 4 tokens in the short prefix template
     model.config.rag = not args.disable_rag
   
+    #print("model",model)
+    #print(stop)
     # freeze parameters
     for param in model.encoder.parameters():
         param.requires_grad = False
-    if not args.train_decoder:
-        for name, param in model.decoder.named_parameters():
-            if 'crossattention' not in name:
-                param.requires_grad = False
+
+    if "xglm" in args.decoder_name or "opt" in args.decoder_name:
+        if not args.train_decoder:
+                for name, param in model.decoder.named_parameters():
+                    if 'encoder_attn' not in name:
+                        param.requires_grad = False
+
+    else:
+        if not args.train_decoder:
+            for name, param in model.decoder.named_parameters():
+                if 'crossattention' not in name:
+                    param.requires_grad = False
 
     # count trainable parameters
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
@@ -72,14 +98,24 @@ def get_data(tokenizer, max_length, args):
     data = load_data_for_training(args.annotations_path, args.captions_path)
     train_df = pd.DataFrame(data['train'])
 
-    train_dataset = TrainDataset(
-                           df=train_df,
-                           features_path=os.path.join(args.features_dir,'train.hdf5'),
-                           tokenizer=tokenizer,
-                           rag=not args.disable_rag,
-                           template_path=args.template_path,
-                           k=args.k,
-                           max_target_length=max_length)
+    if args.ablation_visual:
+        train_dataset =  AblationFeaturesDataset(
+                            df=train_df,
+                            features_path=os.path.join(args.features_dir,'train.hdf5'),
+                            tokenizer=tokenizer,
+                            rag=not args.disable_rag,
+                            template_path=args.template_path,
+                            k=args.k,
+                            max_target_length=max_length)
+    else:
+        train_dataset = TrainDataset(
+                            df=train_df,
+                            features_path=os.path.join(args.features_dir,'train.hdf5'),
+                            tokenizer=tokenizer,
+                            rag=not args.disable_rag,
+                            template_path=args.template_path,
+                            k=args.k,
+                            max_target_length=max_length)
 
     return train_dataset
 
@@ -89,7 +125,10 @@ def main(args):
     train_dataset = get_data(tokenizer, model.config.max_length, args)
 
     model_type = 'norag' if args.disable_rag else 'rag'
-    output_dir = '{}_{}M_{}'.format(model_type, args.attention_size, args.decoder_name)
+    if args.ablation_visual:
+        output_dir = '{}_{}M_{}_ablation'.format(model_type, args.attention_size, args.decoder_name)
+    else:
+        output_dir = '{}_{}M_{}'.format(model_type, args.attention_size, args.decoder_name)
 
     output_dir = os.path.join(args.experiments_dir, output_dir)
     
@@ -137,6 +176,8 @@ if __name__ == '__main__':
     parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size")
     parser.add_argument("--gradient_steps", type=int, default=1, help="Number of gradient accumulation steps")
+
+    parser.add_argument("--ablation_visual", action="store_true", default=False, help="Whether to blank visual features")
 
     args = parser.parse_args()
 

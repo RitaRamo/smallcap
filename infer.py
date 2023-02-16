@@ -10,6 +10,7 @@ import torch
 from transformers import AutoTokenizer, CLIPFeatureExtractor, AutoModel
 from transformers.models.auto.configuration_auto import AutoConfig
 from transformers.modeling_outputs import BaseModelOutput
+from optimum.bettertransformer import BetterTransformer
 
 from src.utils import load_data_for_inference, prep_strings, postprocess_preds
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -82,7 +83,6 @@ def evaluate_rag_model(args, feature_extractor, tokenizer, model, eval_df):
     return out
 
 def load_model(args, checkpoint_path):
-
     config = AutoConfig.from_pretrained(checkpoint_path + '/config.json')
     model = AutoModel.from_pretrained(checkpoint_path)
     model.config = config
@@ -92,6 +92,7 @@ def load_model(args, checkpoint_path):
 
 def infer_one_checkpoint(args, feature_extractor, tokenizer, checkpoint_path, eval_df, infer_fn):
     model = load_model(args, checkpoint_path)
+    #model = BetterTransformer.transform(model, keep_original_model=True)
     preds = infer_fn(args, feature_extractor, tokenizer, model, eval_df)
     with open(os.path.join(checkpoint_path, args.outfile_name), 'w') as outfile:
         json.dump(preds, outfile)
@@ -100,10 +101,21 @@ def register_model_and_config():
     from transformers import AutoModelForCausalLM
     from src.vision_encoder_decoder import SmallCap, SmallCapConfig
     from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
+    from src.opt import ThisOPTConfig, ThisOPTForCausalLM
+    from src.xglm import ThisXGLMConfig, ThisXGLMForCausalLM
 
+    AutoConfig.register("this_xglm", ThisXGLMConfig)
+    AutoModel.register(ThisXGLMConfig, ThisXGLMForCausalLM)
+    AutoModelForCausalLM.register(ThisXGLMConfig, ThisXGLMForCausalLM)
+
+    AutoConfig.register("this_opt", ThisOPTConfig)
+    AutoModel.register(ThisOPTConfig, ThisOPTForCausalLM)
+    AutoModelForCausalLM.register(ThisOPTConfig, ThisOPTForCausalLM)
+    
     AutoConfig.register("this_gpt2", ThisGPT2Config)
     AutoModel.register(ThisGPT2Config, ThisGPT2LMHeadModel)
     AutoModelForCausalLM.register(ThisGPT2Config, ThisGPT2LMHeadModel)
+    
     AutoConfig.register("smallcap", SmallCapConfig)
     AutoModel.register(SmallCapConfig, SmallCap)
 
@@ -113,6 +125,9 @@ def main(args):
 
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+    if args.infer_test or args.disable_rag:
+        args.features_path = None
+    
     if args.features_path is not None:
         feature_extractor = None
     else:
@@ -122,6 +137,7 @@ def main(args):
         args.k=0
         infer_fn = evaluate_norag_model
     else:
+        args.k= args.k 
         infer_fn = evaluate_rag_model
 
     if args.infer_test:
@@ -152,13 +168,16 @@ def main(args):
             if 'runs' in checkpoint_path:
                 continue
             checkpoint_path = os.path.join(args.model_path, checkpoint_path)
-            infer_one_checkpoint(args, feature_extractor, tokenizer, checkpoint_path, eval_df, infer_fn)
+            if os.path.exists(os.path.join(checkpoint_path, args.outfile_name)):
+                print('Found existing file for', checkpoint_path)
+            else:
+                infer_one_checkpoint(args, feature_extractor, tokenizer, checkpoint_path, eval_df, infer_fn)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Model Training')
     parser.add_argument("--images_dir", type=str, default="data/images/", help="Directory where input image features are stored")
-    parser.add_argument("--features_path", type=str, default=None, help="H5 file with cached input image features")
+    parser.add_argument("--features_path", type=str, default='features/val.hdf5', help="H5 file with cached input image features")
     parser.add_argument("--annotations_path", type=str, default="data/dataset_coco.json", help="JSON file with annotations in Karpathy splits")
         
     parser.add_argument("--model_path", type=str, default=None, help="Path to model to use for inference")
