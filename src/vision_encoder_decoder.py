@@ -30,21 +30,12 @@ from transformers.models.auto.modeling_auto import AutoModel, AutoModelForCausal
 from transformers.models.vision_encoder_decoder.configuration_vision_encoder_decoder import VisionEncoderDecoderConfig
 import inspect
 
-#from .gpt2 import ThisGPT2LMHeadModel
-#from .gpt2 import ThisGPT2Config
-
-from .gpt2_refactor import ThisGPT2LMHeadModel
-from .gpt2_refactor import ThisGPT2Config
-
-
+from .gpt2 import ThisGPT2LMHeadModel
+from .gpt2 import ThisGPT2Config
 from .xglm import ThisXGLMForCausalLM
 from .xglm import ThisXGLMConfig
-
-
 from .opt import ThisOPTForCausalLM
 from .opt import ThisOPTConfig
-
-
 
 # Copied from transformers.models.encoder_decoder.modeling_encoder_decoder.shift_tokens_right
 def shift_tokens_right(input_ids: torch.Tensor, pad_token_id: int, decoder_start_token_id: int):
@@ -499,8 +490,6 @@ class SmallCap(PreTrainedModel):
             decoder_input_ids = shift_tokens_right(
                 labels, self.config.pad_token_id, self.config.decoder_start_token_id
             )
-
-       
         
         # Decode
         decoder_outputs = self.decoder(
@@ -517,8 +506,6 @@ class SmallCap(PreTrainedModel):
             **kwargs_decoder,
         )
 
-        
-          
         # Compute loss independent from decoder (as some shift the logits inside them)
         loss = None
         if labels is not None:

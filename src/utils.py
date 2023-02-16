@@ -74,7 +74,7 @@ class TrainDataset(Dataset):
         else:
             decoder_input_ids, labels = prep_strings(text, self.tokenizer, max_length=self.max_target_length)
         # load precomputed features
-        encoder_outputs = self.features[self.df['file_name'][idx]][()]
+        encoder_outputs = self.features[self.df['cocoid'][idx]][()]
         encoding = {"encoder_outputs": torch.tensor(encoder_outputs), 
                     "decoder_input_ids": torch.tensor(decoder_input_ids),
                     "labels": torch.tensor(labels)}
