@@ -10,8 +10,7 @@ from transformers import Seq2SeqTrainer, default_data_collator, Seq2SeqTrainingA
 
 from transformers import VisionEncoderDecoderModel, CLIPModel, CLIPVisionModel,EncoderDecoderModel
 from src.vision_encoder_decoder import SmallCap, SmallCapConfig
-#from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
-from src.gpt2_refactor import ThisGPT2Config, ThisGPT2LMHeadModel
+from src.gpt2 import ThisGPT2Config, ThisGPT2LMHeadModel
 from src.xglm import ThisXGLMConfig, ThisXGLMForCausalLM
 from src.opt import ThisOPTConfig, ThisOPTForCausalLM
 
