@@ -10,7 +10,6 @@ import torch
 from transformers import AutoTokenizer, CLIPFeatureExtractor, AutoModel
 from transformers.models.auto.configuration_auto import AutoConfig
 from transformers.modeling_outputs import BaseModelOutput
-from optimum.bettertransformer import BetterTransformer
 
 from src.utils import load_data_for_inference, prep_strings, postprocess_preds
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -92,7 +91,6 @@ def load_model(args, checkpoint_path):
 
 def infer_one_checkpoint(args, feature_extractor, tokenizer, checkpoint_path, eval_df, infer_fn):
     model = load_model(args, checkpoint_path)
-    #model = BetterTransformer.transform(model, keep_original_model=True)
     preds = infer_fn(args, feature_extractor, tokenizer, model, eval_df)
     with open(os.path.join(checkpoint_path, args.outfile_name), 'w') as outfile:
         json.dump(preds, outfile)
@@ -137,7 +135,6 @@ def main(args):
         args.k=0
         infer_fn = evaluate_norag_model
     else:
-        args.k= args.k 
         infer_fn = evaluate_rag_model
 
     if args.infer_test:
