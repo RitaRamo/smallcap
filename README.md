@@ -91,14 +91,14 @@ Note: You can safely ignore the warning `Some weights of ThisGPT2LMHeadModel wer
 
 
 If you find our code/data/models or ideas useful in your research, please consider citing the paper:
-
+```
 @article{ramos2022smallcap,
   title={SmallCap: Lightweight Image Captioning Prompted with Retrieval Augmentation},
   author={Ramos, Rita and Martins, Bruno and Elliott, Desmond and Kementchedjhieva, Yova},
   journal={arXiv preprint arXiv:2209.15323},
   year={2022}
 }
-
+```
 
 
 
