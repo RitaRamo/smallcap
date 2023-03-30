@@ -61,10 +61,7 @@ def get_model_and_auxiliaries(args):
     if not args.disable_rag:
         model.config.k = args.k
         model.config.retrieval_encoder = args.retrieval_encoder   
-        model.config.max_length = args.k * CAPTION_LENGTH + CAPTION_LENGTH + 18 # there are 18 tokens in the long prefix template    
-    
-    else:
-        model.config.max_length = CAPTION_LENGTH + 4 # there are 4 tokens in the short prefix template
+    model.config.max_length = CAPTION_LENGTH   
     model.config.rag = not args.disable_rag
   
     #print("model",model)
@@ -105,7 +102,7 @@ def get_data(tokenizer, max_length, args):
                             rag=not args.disable_rag,
                             template_path=args.template_path,
                             k=args.k,
-                            max_target_length=max_length)
+                            max_caption_length=max_length)
     else:
         train_dataset = TrainDataset(
                             df=train_df,
@@ -114,7 +111,7 @@ def get_data(tokenizer, max_length, args):
                             rag=not args.disable_rag,
                             template_path=args.template_path,
                             k=args.k,
-                            max_target_length=max_length)
+                            max_caption_length=max_length)
 
     return train_dataset
 

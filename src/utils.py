@@ -23,7 +23,7 @@ def prep_strings(text, tokenizer, template=None, retrieved_caps=None, k=None, is
     else:
         prefix = SIMPLE_PREFIX
 
-    prefix_ids = tokenizer.encode(prefix, add_special_tokens=False)
+    prefix_ids = tokenizer.encode(prefix)
     len_prefix = len(prefix_ids)
 
     text_ids = tokenizer.encode(text, add_special_tokens=False)
@@ -31,15 +31,8 @@ def prep_strings(text, tokenizer, template=None, retrieved_caps=None, k=None, is
         text_ids = text_ids[:CAPTION_LENGTH]
     input_ids = prefix_ids + text_ids if not is_test else prefix_ids
 
-    # OPT has a special BOS token
-    if 'opt' in tokenizer.name_or_path:
-        input_ids = [tokenizer.bos_token_id] + input_ids
-        offset = 0
-    else:
-        offset = 1
-
-    # we ignore the prefix (minus one for GPT2 as the first subtoken in the prefix is not predicted)
-    label_ids = [-100] * (len_prefix - offset) + text_ids + [tokenizer.eos_token_id] 
+    # we ignore the prefix (minus one as the first subtoken in the prefix is not predicted)
+    label_ids = [-100] * (len_prefix - 1) + text_ids + [tokenizer.eos_token_id] 
     if padding:
         input_ids += [tokenizer.pad_token_id] * (max_length - len(input_ids))
         label_ids += [-100] * (max_length - len(label_ids))
@@ -52,19 +45,25 @@ def prep_strings(text, tokenizer, template=None, retrieved_caps=None, k=None, is
 def postprocess_preds(pred, tokenizer):
     pred = pred.split(SIMPLE_PREFIX)[-1]
     pred = pred.replace(tokenizer.pad_token, '')
+    if pred.startswith(tokenizer.bos_token):
+        pred = pred[len(tokenizer.bos_token):]
     if pred.endswith(tokenizer.eos_token):
-        pred = pred[:-1]
+        pred = pred[:-len(tokenizer.eos_token)]
     return pred
 
 class TrainDataset(Dataset):
-    def __init__(self, df, features_path, tokenizer, rag=False, template_path=None, k=None, max_target_length=150):
+    def __init__(self, df, features_path, tokenizer, rag=False, template_path=None, k=None, max_caption_length=25):
         self.df = df
         self.tokenizer = tokenizer
-        self.max_target_length = max_target_length 
         self.features = h5py.File(features_path, 'r')
 
         if rag:
             self.template = open(template_path).read().strip() + ' '
+            self.max_target_length = (max_caption_length  # target caption
+                                     + max_caption_length * k # retrieved captions
+                                     + len(tokenizer.encode(self.template)) # template
+                                     + len(tokenizer.encode('\n\n')) * (k-1) # separator between captions
+                                     )
             assert k is not None 
             self.k = k
         self.rag = rag
