@@ -16,23 +16,30 @@ def prep_strings(text, tokenizer, template=None, retrieved_caps=None, k=None, is
     else:
         padding = True 
         truncation = True
-
+    
     if retrieved_caps is not None:
         infix = '\n\n'.join(retrieved_caps[:k]) + '.'
         prefix = template.replace('||', infix)
     else:
         prefix = SIMPLE_PREFIX
 
-    prefix_ids = tokenizer.encode(prefix)
+    prefix_ids = tokenizer.encode(prefix, add_special_tokens=False)
     len_prefix = len(prefix_ids)
 
-    text_ids = tokenizer.encode(text)
+    text_ids = tokenizer.encode(text, add_special_tokens=False)
     if truncation:
         text_ids = text_ids[:CAPTION_LENGTH]
     input_ids = prefix_ids + text_ids if not is_test else prefix_ids
-    
-    # we ignore the prefix (minus one as the first subtoken in the prefix is not predicted)
-    label_ids = [-100] * (len_prefix - 1) + text_ids + [tokenizer.eos_token_id] 
+
+    # OPT has a special BOS token
+    if 'opt' in tokenizer.name_or_path:
+        input_ids = [tokenizer.bos_token_id] + input_ids
+        offset = 0
+    else:
+        offset = 1
+
+    # we ignore the prefix (minus one for GPT2 as the first subtoken in the prefix is not predicted)
+    label_ids = [-100] * (len_prefix - offset) + text_ids + [tokenizer.eos_token_id] 
     if padding:
         input_ids += [tokenizer.pad_token_id] * (max_length - len(input_ids))
         label_ids += [-100] * (max_length - len(label_ids))
