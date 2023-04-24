@@ -139,16 +139,16 @@ def check_args(args):
     parser = argparse.ArgumentParser()
     
     #Info of the dataset to evaluate on (vizwiz, flick30k, msr-vtt)
-    parser.add_argument("--images_dir",help="Folder where the preprocessed image data is located", default="data2/vizwiz/images")
-    parser.add_argument("--dataset_splits",help="File containing the dataset splits", default="data2/vizwiz/dataset_splits.json")
-    parser.add_argument("--images_names",help="File containing the images names per id", default="data2/vizwiz/images_names.json")
+    parser.add_argument("--images_dir",help="Folder where the preprocessed image data is located", default="data/vizwiz/images")
+    parser.add_argument("--dataset_splits",help="File containing the dataset splits", default="data/vizwiz/dataset_splits.json")
+    parser.add_argument("--images_names",help="File containing the images names per id", default="data/vizwiz/images_names.json")
     parser.add_argument("--split", default="val_images", choices=["val_images", "test_images"])
     parser.add_argument("--max-caption-len", type=int, default=25)
 
     #Which datastore to use (web, human)
-    parser.add_argument("--datastore_path", type=str, default="datastore2/vizwiz/vizwiz")
+    parser.add_argument("--datastore_path", type=str, default="datastore/vizwiz/vizwiz")
     parser.add_argument("--index_captions",
-                        help="File containing the captions of the datastore per id", default="datastore2/vizwiz/vizwiz.json")
+                        help="File containing the captions of the datastore per id", default="datastore/vizwiz/vizwiz.json")
     parser.add_argument("--output-path",help="Folder where to store outputs", default="eval_vizwiz_with_datastore_from_vizwiz.json")          
 
     parsed_args = parser.parse_args(args)
