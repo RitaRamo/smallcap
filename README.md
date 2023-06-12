@@ -1,6 +1,6 @@
 # SmallCap
 
-> We've now a demo, check it out: https://huggingface.co/spaces/RitaParadaRamos/SmallCapDemo :v:
+> We now have a demo, check it out: https://huggingface.co/spaces/RitaParadaRamos/SmallCapDemo :v:
 
 ## Dependencies
 
