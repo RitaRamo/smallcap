@@ -1,5 +1,7 @@
 # SmallCap
 
+> We've now a demo, check it out: https://huggingface.co/spaces/RitaParadaRamos/SmallCapDemo
+
 ## Dependencies
 
 The code was developed in Python 3.9.
