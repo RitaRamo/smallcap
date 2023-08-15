@@ -56,6 +56,7 @@ class TrainDataset(Dataset):
         self.df = df
         self.tokenizer = tokenizer
         self.features = h5py.File(features_path, 'r')
+        self.max_target_length = max_caption_length
 
         if rag:
             self.template = open(template_path).read().strip() + ' '
